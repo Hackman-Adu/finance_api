@@ -21,6 +21,7 @@ Handler routeBaseMiddleware(Handler handler) {
     var redis = await RedisClient().getCommand();
     return handler
         .use(cors())
+        .use(requestLogger())
         .use(provider<PrismaClient>((context) => prismaClient))
         .use(provider<Command?>((context) => redis))(context);
   };
@@ -50,8 +51,6 @@ Handler authMiddleware(Handler handler) {
       return Response.json(
           statusCode: HttpStatus.forbidden,
           body: {"message": "Session revoked"});
-    return handler
-        .use(requestLogger())
-        .use(provider<User>((context) => user))(context);
+    return handler.use(provider<User>((context) => user))(context);
   };
 }
