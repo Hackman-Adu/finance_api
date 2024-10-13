@@ -1,0 +1,139 @@
+generator client {
+  provider = "dart run orm"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  customer_id               String                      @id @default(uuid())
+  last_name                 String
+  other_names               String
+  mobile                    String                      @unique
+  place_of_work             String
+  location                  String
+  photo_url                 String                      @default("")
+  reference_for_loan        String                      @default("")
+  created                   DateTime                    @default(now())
+  updated                   DateTime                    @updatedAt
+  payment_method            CustomerPaymentMethod?
+  CustomerLoan              CustomerLoan[]
+  CustomerLoanRepayment     CustomerLoanRepayment[]
+  CustomerInvestment        CustomerInvestment[]
+  CustomerInvestmentPayment CustomerInvestmentPayment[]
+
+  @@index([customer_id, mobile])
+  @@map("customers")
+}
+
+model CustomerPaymentMethod {
+  id             String        @id @default(uuid())
+  customer_id    String        @unique
+  customer       Customer?     @relation(fields: [customer_id], references: [customer_id])
+  payment_method PaymentMethod @default(momo)
+  details        String
+  created        DateTime      @default(now())
+  updated        DateTime      @updatedAt
+
+  @@map("customer_payment_methods")
+}
+
+model CustomerLoan {
+  loan_id               String                  @id @default(uuid())
+  customer_id           String
+  date                  DateTime                @default(now())
+  amount                Float
+  currency              Currency                @default(GHS)
+  repayment_profile     RepaymentProfile        @default(amortization)
+  period                Int
+  created               DateTime                @default(now())
+  updated               DateTime                @updatedAt
+  customer              Customer                @relation(fields: [customer_id], references: [customer_id])
+  CustomerLoanRepayment CustomerLoanRepayment[]
+
+  @@index([customer_id])
+  @@map("customer_loans")
+}
+
+model CustomerLoanRepayment {
+  id            String       @id @default(uuid())
+  loan_id       String
+  customer_id   String
+  amount        Float
+  date          DateTime     @default(now())
+  created       DateTime     @default(now())
+  updated       DateTime     @updatedAt
+  customer_loan CustomerLoan @relation(fields: [loan_id], references: [loan_id])
+  customer      Customer     @relation(fields: [customer_id], references: [customer_id])
+
+  @@map("customer_loan_repayments")
+}
+
+model CustomerInvestment {
+  investment_id             String                      @id @default(uuid())
+  customer_id               String
+  date                      DateTime                    @default(now())
+  amount                    Float
+  currency                  Currency                    @default(GHS)
+  payment_method            PaymentMethod               @default(momo)
+  interest_rate             Float
+  payment                   PaymentFrequency            @default(monthly)
+  created                   DateTime                    @default(now())
+  updated                   DateTime                    @updatedAt
+  customer                  Customer                    @relation(fields: [customer_id], references: [customer_id])
+  CustomerInvestmentPayment CustomerInvestmentPayment[]
+
+  @@index([customer_id])
+  @@map("customer_investments")
+}
+
+model CustomerInvestmentPayment {
+  id            String             @id @default(uuid())
+  investment_id String
+  customer_id   String
+  amount        Float
+  date          DateTime           @default(now())
+  created       DateTime           @default(now())
+  updated       DateTime           @updatedAt
+  investment    CustomerInvestment @relation(fields: [investment_id], references: [investment_id])
+  customer      Customer           @relation(fields: [customer_id], references: [customer_id])
+
+  @@index([investment_id])
+  @@map("customer_investment_payments")
+}
+
+model User {
+  user_id       String  @id @default(uuid())
+  email_address String  @unique
+  mobile        String? @unique
+  last_name     String  @default("")
+  other_names   String  @default("")
+  photo_url     String  @default("")
+  password      String
+
+  @@map("users")
+}
+
+enum PaymentFrequency {
+  monthly
+  yearly
+}
+
+enum PaymentMethod {
+  momo
+  bank
+}
+
+enum Currency {
+  GHS
+  UDS
+}
+
+enum RepaymentProfile {
+  amortization
+  reducting_balance
+  interest_only_till_maturity
+  custom
+}
