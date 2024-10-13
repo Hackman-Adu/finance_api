@@ -31,7 +31,7 @@ model Customer {
 model CustomerPaymentMethod {
   id             String        @id @default(uuid())
   customer_id    String        @unique
-  customer       Customer?     @relation(fields: [customer_id], references: [customer_id])
+  customer       Customer?     @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)
   payment_method PaymentMethod @default(momo)
   details        String
   created        DateTime      @default(now())
@@ -50,7 +50,7 @@ model CustomerLoan {
   period                Int
   created               DateTime                @default(now())
   updated               DateTime                @updatedAt
-  customer              Customer                @relation(fields: [customer_id], references: [customer_id])
+  customer              Customer                @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)
   CustomerLoanRepayment CustomerLoanRepayment[]
 
   @@index([customer_id])
@@ -65,8 +65,8 @@ model CustomerLoanRepayment {
   date          DateTime     @default(now())
   created       DateTime     @default(now())
   updated       DateTime     @updatedAt
-  customer_loan CustomerLoan @relation(fields: [loan_id], references: [loan_id])
-  customer      Customer     @relation(fields: [customer_id], references: [customer_id])
+  customer_loan CustomerLoan @relation(fields: [loan_id], references: [loan_id], onDelete: Cascade, onUpdate: Cascade)
+  customer      Customer     @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("customer_loan_repayments")
 }
@@ -82,7 +82,7 @@ model CustomerInvestment {
   payment                   PaymentFrequency            @default(monthly)
   created                   DateTime                    @default(now())
   updated                   DateTime                    @updatedAt
-  customer                  Customer                    @relation(fields: [customer_id], references: [customer_id])
+  customer                  Customer                    @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)
   CustomerInvestmentPayment CustomerInvestmentPayment[]
 
   @@index([customer_id])
@@ -97,8 +97,8 @@ model CustomerInvestmentPayment {
   date          DateTime           @default(now())
   created       DateTime           @default(now())
   updated       DateTime           @updatedAt
-  investment    CustomerInvestment @relation(fields: [investment_id], references: [investment_id])
-  customer      Customer           @relation(fields: [customer_id], references: [customer_id])
+  investment    CustomerInvestment @relation(fields: [investment_id], references: [investment_id], onDelete: Cascade, onUpdate: Cascade)
+  customer      Customer           @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([investment_id])
   @@map("customer_investment_payments")

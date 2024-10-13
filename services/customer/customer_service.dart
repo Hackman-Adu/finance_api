@@ -114,4 +114,16 @@ class CustomerService implements CustomerServiceManager {
       throw Failure(HttpStatus.notFound, "Customer not found");
     return customer;
   }
+
+  @override
+  Future<void> deleteCustomer(RequestContext context) async {
+    var customerId = (await context.request.json())['customer_id'];
+    var customer = await prismaClient.customer
+        .findUnique(where: CustomerWhereUniqueInput(customerId: customerId));
+    if (customer == null)
+      throw Failure(HttpStatus.notFound, "Customer not found");
+    await prismaClient.customer
+        .delete(where: CustomerWhereUniqueInput(customerId: customerId));
+    await _clearCachedCustomers(context);
+  }
 }

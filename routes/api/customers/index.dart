@@ -10,6 +10,7 @@ Future<Response> onRequest(RequestContext context) async {
   return switch (request.method) {
     HttpMethod.post => await controller.createCustomer(context),
     HttpMethod.get => await controller.getCustomers(context),
+    HttpMethod.delete => await controller.deleteCustomer(context),
     HttpMethod.put => await controller.updateCustomer(context),
     _ => Response(statusCode: HttpStatus.methodNotAllowed)
   };

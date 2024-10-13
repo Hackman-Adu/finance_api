@@ -3621,6 +3621,7 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
             'relationName': 'CustomerToCustomerPaymentMethod',
             'relationFromFields': ['customer_id'],
             'relationToFields': ['customer_id'],
+            'relationOnDelete': 'Cascade',
             'isGenerated': false,
             'isUpdatedAt': false,
           },
@@ -3835,6 +3836,7 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
             'relationName': 'CustomerToCustomerLoan',
             'relationFromFields': ['customer_id'],
             'relationToFields': ['customer_id'],
+            'relationOnDelete': 'Cascade',
             'isGenerated': false,
             'isUpdatedAt': false,
           },
@@ -3980,6 +3982,7 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
             'relationName': 'CustomerLoanToCustomerLoanRepayment',
             'relationFromFields': ['loan_id'],
             'relationToFields': ['loan_id'],
+            'relationOnDelete': 'Cascade',
             'isGenerated': false,
             'isUpdatedAt': false,
           },
@@ -3996,6 +3999,7 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
             'relationName': 'CustomerToCustomerLoanRepayment',
             'relationFromFields': ['customer_id'],
             'relationToFields': ['customer_id'],
+            'relationOnDelete': 'Cascade',
             'isGenerated': false,
             'isUpdatedAt': false,
           },
@@ -4167,6 +4171,7 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
             'relationName': 'CustomerToCustomerInvestment',
             'relationFromFields': ['customer_id'],
             'relationToFields': ['customer_id'],
+            'relationOnDelete': 'Cascade',
             'isGenerated': false,
             'isUpdatedAt': false,
           },
@@ -4312,6 +4317,7 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
             'relationName': 'CustomerInvestmentToCustomerInvestmentPayment',
             'relationFromFields': ['investment_id'],
             'relationToFields': ['investment_id'],
+            'relationOnDelete': 'Cascade',
             'isGenerated': false,
             'isUpdatedAt': false,
           },
@@ -4328,6 +4334,7 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
             'relationName': 'CustomerToCustomerInvestmentPayment',
             'relationFromFields': ['customer_id'],
             'relationToFields': ['customer_id'],
+            'relationOnDelete': 'Cascade',
             'isGenerated': false,
             'isUpdatedAt': false,
           },
@@ -4465,6 +4472,15 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
         ],
       },
       {
+        'model': 'Customer',
+        'type': 'normal',
+        'isDefinedOnField': false,
+        'fields': [
+          {'name': 'customer_id'},
+          {'name': 'mobile'},
+        ],
+      },
+      {
         'model': 'CustomerPaymentMethod',
         'type': 'id',
         'isDefinedOnField': true,
@@ -4590,7 +4606,7 @@ class PrismaClient extends _i1.BasePrismaClient<PrismaClient> {
   @override
   get $engine => _engine ??= _i5.BinaryEngine(
         schema:
-            'generator client {\n  provider = "dart run orm"\n}\n\ndatasource db {\n  provider = "mysql"\n  url      = env("DATABASE_URL")\n}\n\nmodel Customer {\n  customer_id               String                      @id @default(uuid())\n  last_name                 String\n  other_names               String\n  mobile                    String                      @unique\n  place_of_work             String\n  location                  String\n  photo_url                 String                      @default("")\n  reference_for_loan        String                      @default("")\n  created                   DateTime                    @default(now())\n  updated                   DateTime                    @updatedAt\n  payment_method            CustomerPaymentMethod?\n  CustomerLoan              CustomerLoan[]\n  CustomerLoanRepayment     CustomerLoanRepayment[]\n  CustomerInvestment        CustomerInvestment[]\n  CustomerInvestmentPayment CustomerInvestmentPayment[]\n\n  @@map("customers")\n}\n\nmodel CustomerPaymentMethod {\n  id             String        @id @default(uuid())\n  customer_id    String        @unique\n  customer       Customer?     @relation(fields: [customer_id], references: [customer_id])\n  payment_method PaymentMethod @default(momo)\n  details        String\n  created        DateTime      @default(now())\n  updated        DateTime      @updatedAt\n\n  @@map("customer_payment_methods")\n}\n\nmodel CustomerLoan {\n  loan_id               String                  @id @default(uuid())\n  customer_id           String\n  date                  DateTime                @default(now())\n  amount                Float\n  currency              Currency                @default(GHS)\n  repayment_profile     RepaymentProfile        @default(amortization)\n  period                Int\n  created               DateTime                @default(now())\n  updated               DateTime                @updatedAt\n  customer              Customer                @relation(fields: [customer_id], references: [customer_id])\n  CustomerLoanRepayment CustomerLoanRepayment[]\n\n  @@index([customer_id])\n  @@map("customer_loans")\n}\n\nmodel CustomerLoanRepayment {\n  id            String       @id @default(uuid())\n  loan_id       String\n  customer_id   String\n  amount        Float\n  date          DateTime     @default(now())\n  created       DateTime     @default(now())\n  updated       DateTime     @updatedAt\n  customer_loan CustomerLoan @relation(fields: [loan_id], references: [loan_id])\n  customer      Customer     @relation(fields: [customer_id], references: [customer_id])\n\n  @@map("customer_loan_repayments")\n}\n\nmodel CustomerInvestment {\n  investment_id             String                      @id @default(uuid())\n  customer_id               String\n  date                      DateTime                    @default(now())\n  amount                    Float\n  currency                  Currency                    @default(GHS)\n  payment_method            PaymentMethod               @default(momo)\n  interest_rate             Float\n  payment                   PaymentFrequency            @default(monthly)\n  created                   DateTime                    @default(now())\n  updated                   DateTime                    @updatedAt\n  customer                  Customer                    @relation(fields: [customer_id], references: [customer_id])\n  CustomerInvestmentPayment CustomerInvestmentPayment[]\n\n  @@index([customer_id])\n  @@map("customer_investments")\n}\n\nmodel CustomerInvestmentPayment {\n  id            String             @id @default(uuid())\n  investment_id String\n  customer_id   String\n  amount        Float\n  date          DateTime           @default(now())\n  created       DateTime           @default(now())\n  updated       DateTime           @updatedAt\n  investment    CustomerInvestment @relation(fields: [investment_id], references: [investment_id])\n  customer      Customer           @relation(fields: [customer_id], references: [customer_id])\n\n  @@index([investment_id])\n  @@map("customer_investment_payments")\n}\n\nmodel User {\n  user_id       String  @id @default(uuid())\n  email_address String  @unique\n  mobile        String? @unique\n  last_name     String  @default("")\n  other_names   String  @default("")\n  photo_url     String  @default("")\n  password      String\n\n  @@map("users")\n}\n\nenum PaymentFrequency {\n  monthly\n  yearly\n}\n\nenum PaymentMethod {\n  momo\n  bank\n}\n\nenum Currency {\n  GHS\n  UDS\n}\n\nenum RepaymentProfile {\n  amortization\n  reducting_balance\n  interest_only_till_maturity\n  custom\n}\n',
+            'generator client {\n  provider = "dart run orm"\n}\n\ndatasource db {\n  provider = "mysql"\n  url      = env("DATABASE_URL")\n}\n\nmodel Customer {\n  customer_id               String                      @id @default(uuid())\n  last_name                 String\n  other_names               String\n  mobile                    String                      @unique\n  place_of_work             String\n  location                  String\n  photo_url                 String                      @default("")\n  reference_for_loan        String                      @default("")\n  created                   DateTime                    @default(now())\n  updated                   DateTime                    @updatedAt\n  payment_method            CustomerPaymentMethod?\n  CustomerLoan              CustomerLoan[]\n  CustomerLoanRepayment     CustomerLoanRepayment[]\n  CustomerInvestment        CustomerInvestment[]\n  CustomerInvestmentPayment CustomerInvestmentPayment[]\n\n  @@index([customer_id, mobile])\n  @@map("customers")\n}\n\nmodel CustomerPaymentMethod {\n  id             String        @id @default(uuid())\n  customer_id    String        @unique\n  customer       Customer?     @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)\n  payment_method PaymentMethod @default(momo)\n  details        String\n  created        DateTime      @default(now())\n  updated        DateTime      @updatedAt\n\n  @@map("customer_payment_methods")\n}\n\nmodel CustomerLoan {\n  loan_id               String                  @id @default(uuid())\n  customer_id           String\n  date                  DateTime                @default(now())\n  amount                Float\n  currency              Currency                @default(GHS)\n  repayment_profile     RepaymentProfile        @default(amortization)\n  period                Int\n  created               DateTime                @default(now())\n  updated               DateTime                @updatedAt\n  customer              Customer                @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)\n  CustomerLoanRepayment CustomerLoanRepayment[]\n\n  @@index([customer_id])\n  @@map("customer_loans")\n}\n\nmodel CustomerLoanRepayment {\n  id            String       @id @default(uuid())\n  loan_id       String\n  customer_id   String\n  amount        Float\n  date          DateTime     @default(now())\n  created       DateTime     @default(now())\n  updated       DateTime     @updatedAt\n  customer_loan CustomerLoan @relation(fields: [loan_id], references: [loan_id], onDelete: Cascade, onUpdate: Cascade)\n  customer      Customer     @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)\n\n  @@map("customer_loan_repayments")\n}\n\nmodel CustomerInvestment {\n  investment_id             String                      @id @default(uuid())\n  customer_id               String\n  date                      DateTime                    @default(now())\n  amount                    Float\n  currency                  Currency                    @default(GHS)\n  payment_method            PaymentMethod               @default(momo)\n  interest_rate             Float\n  payment                   PaymentFrequency            @default(monthly)\n  created                   DateTime                    @default(now())\n  updated                   DateTime                    @updatedAt\n  customer                  Customer                    @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)\n  CustomerInvestmentPayment CustomerInvestmentPayment[]\n\n  @@index([customer_id])\n  @@map("customer_investments")\n}\n\nmodel CustomerInvestmentPayment {\n  id            String             @id @default(uuid())\n  investment_id String\n  customer_id   String\n  amount        Float\n  date          DateTime           @default(now())\n  created       DateTime           @default(now())\n  updated       DateTime           @updatedAt\n  investment    CustomerInvestment @relation(fields: [investment_id], references: [investment_id], onDelete: Cascade, onUpdate: Cascade)\n  customer      Customer           @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: Cascade)\n\n  @@index([investment_id])\n  @@map("customer_investment_payments")\n}\n\nmodel User {\n  user_id       String  @id @default(uuid())\n  email_address String  @unique\n  mobile        String? @unique\n  last_name     String  @default("")\n  other_names   String  @default("")\n  photo_url     String  @default("")\n  password      String\n\n  @@map("users")\n}\n\nenum PaymentFrequency {\n  monthly\n  yearly\n}\n\nenum PaymentMethod {\n  momo\n  bank\n}\n\nenum Currency {\n  GHS\n  UDS\n}\n\nenum RepaymentProfile {\n  amortization\n  reducting_balance\n  interest_only_till_maturity\n  custom\n}\n',
         datasources: const {
           'db': _i1.Datasource(
             _i1.DatasourceType.environment,

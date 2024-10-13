@@ -7,6 +7,8 @@ abstract class CustomerServiceManager {
 
   Future<Customer?> updateCustomer(RequestContext context);
 
+  Future<void> deleteCustomer(RequestContext context);
+
   Future<Customer?> getCustomer(RequestContext context);
 
   Future<List<Customer>?> getCustomers(RequestContext context);

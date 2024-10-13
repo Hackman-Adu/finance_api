@@ -51,6 +51,17 @@ class CustomerController {
     }
   }
 
+  Future<Response> deleteCustomer(RequestContext context) async {
+    try {
+      await customerService.deleteCustomer(context);
+      return Success(message: "Successful", data: {"deleted": true}).toJson();
+    } on Failure catch (failure) {
+      return failure.toJson();
+    } catch (e) {
+      return Failure(HttpStatus.internalServerError, e.toString()).toJson();
+    }
+  }
+
   Future<Response> getCustomers(RequestContext context) async {
     try {
       var request = context.request;
