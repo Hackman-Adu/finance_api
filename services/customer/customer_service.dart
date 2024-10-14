@@ -126,4 +126,36 @@ class CustomerService implements CustomerServiceManager {
         .delete(where: CustomerWhereUniqueInput(customerId: customerId));
     await _clearCachedCustomers(context);
   }
+
+  PaymentMethod _paymentMethodEnum(String? value) {
+    try {
+      return PaymentMethod.values.byName(value ?? "");
+    } catch (e) {
+      return PaymentMethod.momo;
+    }
+  }
+
+  @override
+  Future<CustomerPaymentMethod?> addPaymentMethod(
+      RequestContext context) async {
+    var request = context.request;
+    var body = await request.json() as Map<String, dynamic>?;
+    var details = body?['details']?.toString() ?? "";
+    var customer = await prismaClient.customer.findUnique(
+        include: CustomerInclude(paymentMethod: PrismaUnion.$1(true)),
+        where: CustomerWhereUniqueInput(customerId: body?['customer_id']));
+    if (customer == null)
+      throw Failure(HttpStatus.notFound, "Customer not found");
+    if (customer.paymentMethod != null) {
+      throw Failure(HttpStatus.notFound, "Customer has a payment method");
+    }
+    if (details.trim().isEmpty)
+      throw Failure(HttpStatus.badRequest, "Details is required");
+    var results = await prismaClient.customerPaymentMethod.create(
+        data: PrismaUnion.$2(CustomerPaymentMethodUncheckedCreateInput(
+            customerId: customer.customerId ?? "",
+            paymentMethod: _paymentMethodEnum(body?['payment_method']),
+            details: details)));
+    return results;
+  }
 }

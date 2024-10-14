@@ -25,6 +25,19 @@ class CustomerController {
     }
   }
 
+  Future<Response> addPaymentMethod(RequestContext context) async {
+    try {
+      var results = await customerService.addPaymentMethod(context);
+      return Success(
+              message: "Successful", data: results?.toJson().removeNulls())
+          .toJson();
+    } on Failure catch (failure) {
+      return failure.toJson();
+    } catch (e) {
+      return Failure(HttpStatus.internalServerError, e.toString()).toJson();
+    }
+  }
+
   Future<Response> _getCustomer(RequestContext context) async {
     try {
       var customer = await this.customerService.getCustomer(context);
