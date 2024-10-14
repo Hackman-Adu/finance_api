@@ -7,6 +7,7 @@ import '../helpers/constants.dart';
 import '../helpers/response.dart';
 import '../prisma/generated_dart_client/client.dart';
 import '../services/user/user_service.dart';
+import 'customer_controller.dart';
 
 class UserController {
   PrismaClient prismaClient;
@@ -20,7 +21,7 @@ class UserController {
       var user = await userService.signIn(context);
       var token = generateToken(user?.toJson());
       await context.read<Command?>()?.set(user?.userId ?? "", token);
-      return Success(message: "Successful", data: user?.toJson())
+      return Success(message: "Successful", data: user?.toJson().filterNulls())
           .toJson(include: {"token": token});
     } on Failure catch (failure) {
       return failure.toJson();

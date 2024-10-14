@@ -16,7 +16,7 @@ class CustomerController {
     try {
       var customer = await this.customerService.createCustomer(context);
       return Success(
-              message: "Successful", data: customer?.toJson().removeNulls())
+              message: "Successful", data: customer?.toJson().filterNulls())
           .toJson();
     } on Failure catch (failure) {
       return failure.toJson();
@@ -29,7 +29,7 @@ class CustomerController {
     try {
       var results = await customerService.addPaymentMethod(context);
       return Success(
-              message: "Successful", data: results?.toJson().removeNulls())
+              message: "Successful", data: results?.toJson().filterNulls())
           .toJson();
     } on Failure catch (failure) {
       return failure.toJson();
@@ -42,7 +42,7 @@ class CustomerController {
     try {
       var customer = await this.customerService.getCustomer(context);
       return Success(
-              message: "Successful", data: customer?.toJson().removeNulls())
+              message: "Successful", data: customer?.toJson().filterNulls())
           .toJson();
     } on Failure catch (failure) {
       return failure.toJson();
@@ -55,7 +55,7 @@ class CustomerController {
     try {
       var customer = await this.customerService.updateCustomer(context);
       return Success(
-              message: "Successful", data: customer?.toJson().removeNulls())
+              message: "Successful", data: customer?.toJson().filterNulls())
           .toJson();
     } on Failure catch (failure) {
       return failure.toJson();
@@ -84,7 +84,7 @@ class CustomerController {
       var customers = await this.customerService.getCustomers(context);
       return Success(
               message: "Successful",
-              data: customers?.map((e) => e.toJson().removeNulls()).toList())
+              data: customers?.map((e) => e.toJson().filterNulls()).toList())
           .toJson();
     } on Failure catch (failure) {
       return failure.toJson();
@@ -95,9 +95,16 @@ class CustomerController {
 }
 
 extension MapExtensionOnMap on Map {
-  Map removeNulls() {
+  Map filterNulls() {
     var data = this;
-    data.removeWhere((k, v) => v == null && v.runtimeType != Map);
+    List<String> keysWithNulls = [];
+    data.forEach((key, value) {
+      if (value == null) keysWithNulls.add(key);
+      if (value is Map) value.filterNulls();
+    });
+    for (var key in keysWithNulls) {
+      data.remove(key);
+    }
     return data;
   }
 }

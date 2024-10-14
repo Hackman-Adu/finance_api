@@ -8,6 +8,7 @@ import '../../helpers/response.dart';
 import '../../prisma/generated_dart_client/client.dart';
 import '../../prisma/generated_dart_client/model.dart';
 import '../../prisma/generated_dart_client/prisma.dart';
+import '../../validations/user.dart';
 import 'user_service_manager.dart';
 
 class UserService implements UserServiceManager {
@@ -17,6 +18,8 @@ class UserService implements UserServiceManager {
   Future<User?> createUser(RequestContext context) async {
     var request = context.request;
     var body = await request.json();
+    var validation = UserValidation.validate(body, UserValidation.user);
+    if (!validation.$1) throw Failure(HttpStatus.badRequest, validation.$2);
     var existUser = await prismaClient.user.findUnique(
         where: UserWhereUniqueInput(emailAddress: body?['email_address']));
     if (existUser != null)
@@ -32,6 +35,8 @@ class UserService implements UserServiceManager {
   Future<User?> signIn(RequestContext context) async {
     var request = context.request;
     var body = await request.json();
+    var validation = UserValidation.validate(body, UserValidation.user);
+    if (!validation.$1) throw Failure(HttpStatus.badRequest, validation.$2);
     var user = await this.prismaClient.user.findUnique(
         where: UserWhereUniqueInput(
             emailAddress: body?['email_address']?.toString()));
