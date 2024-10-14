@@ -6,10 +6,12 @@ import 'package:orm/orm.dart';
 import 'package:redis/redis.dart';
 
 import '../../helpers/constants.dart';
+import '../../helpers/extensions.dart';
 import '../../helpers/response.dart';
 import '../../prisma/generated_dart_client/client.dart';
 import '../../prisma/generated_dart_client/model.dart';
 import '../../prisma/generated_dart_client/prisma.dart';
+import '../../schemas/customer.dart';
 import 'customer_service_manager.dart';
 
 class CustomerService implements CustomerServiceManager {
@@ -19,18 +21,20 @@ class CustomerService implements CustomerServiceManager {
   @override
   Future<Customer?> createCustomer(RequestContext context) async {
     var request = context.request;
-    var body = await request.json();
+    var body = (await request.json() as Map<String, dynamic>?) ?? {};
+    var validate = body.validate(createCustomerSchema);
+    if (!validate.$1) throw Failure(HttpStatus.badRequest, validate.$2);
     var existCustomer = await prismaClient.customer
-        .findUnique(where: CustomerWhereUniqueInput(mobile: body?['mobile']));
+        .findUnique(where: CustomerWhereUniqueInput(mobile: body['mobile']));
     if (existCustomer != null)
       throw Failure(HttpStatus.alreadyReported, "Mobile number already taken");
     var customer = await prismaClient.customer.create(
         data: PrismaUnion.$1(CustomerCreateInput(
-            placeOfWork: body?['place_of_work'],
-            location: body?['location'],
-            mobile: body?['mobile'],
-            otherNames: body?['other_names'],
-            lastName: body?['last_name'])));
+            placeOfWork: body['place_of_work'],
+            location: body['location'],
+            mobile: body['mobile'],
+            otherNames: body['other_names'],
+            lastName: body['last_name'])));
     await _clearCachedCustomers(context);
     return customer;
   }
@@ -67,25 +71,25 @@ class CustomerService implements CustomerServiceManager {
   @override
   Future<Customer?> updateCustomer(RequestContext context) async {
     var request = context.request;
-    var body = await request.json();
+    var body = (await request.json() as Map<String, dynamic>?) ?? {};
+    var validate = body.validate(updateCustomerSchema);
+    if (!validate.$1) throw Failure(HttpStatus.badRequest, validate.$2);
     var existCustomer = await prismaClient.customer.findUnique(
-        where:
-            CustomerWhereUniqueInput(customerId: body?['customer_id'] ?? ''));
+        where: CustomerWhereUniqueInput(customerId: body['customer_id'] ?? ''));
     if (existCustomer == null)
-      throw Failure(HttpStatus.notFound,
-          "Missing customer_id or customer does not exist");
+      throw Failure(HttpStatus.notFound, "Customer does not exist");
     var customer = await prismaClient.customer.update(
         data: PrismaUnion.$1(CustomerUpdateInput(
             photoUrl:
-                PrismaUnion.$1(body?['photo_url'] ?? existCustomer.photoUrl),
+                PrismaUnion.$1(body['photo_url'] ?? existCustomer.photoUrl),
             location:
-                PrismaUnion.$1(body?['location'] ?? existCustomer.location),
+                PrismaUnion.$1(body['location'] ?? existCustomer.location),
             placeOfWork: PrismaUnion.$1(
-                body?['place_of_work'] ?? existCustomer.placeOfWork),
-            otherNames: PrismaUnion.$1(
-                body?['other_names'] ?? existCustomer.otherNames),
+                body['place_of_work'] ?? existCustomer.placeOfWork),
+            otherNames:
+                PrismaUnion.$1(body['other_names'] ?? existCustomer.otherNames),
             lastName:
-                PrismaUnion.$1(body?['last_name'] ?? existCustomer.lastName))),
+                PrismaUnion.$1(body['last_name'] ?? existCustomer.lastName))),
         where: CustomerWhereUniqueInput(customerId: existCustomer.customerId));
     await _clearCachedCustomers(context);
     return customer;
@@ -139,23 +143,23 @@ class CustomerService implements CustomerServiceManager {
   Future<CustomerPaymentMethod?> addPaymentMethod(
       RequestContext context) async {
     var request = context.request;
-    var body = await request.json() as Map<String, dynamic>?;
-    var details = body?['details']?.toString() ?? "";
+    var body = (await request.json() as Map<String, dynamic>?) ?? {};
+    var validate = body.validate(addPaymentMethodSchema);
+    if (!validate.$1) throw Failure(HttpStatus.badRequest, validate.$2);
     var customer = await prismaClient.customer.findUnique(
         include: CustomerInclude(paymentMethod: PrismaUnion.$1(true)),
-        where: CustomerWhereUniqueInput(customerId: body?['customer_id']));
+        where: CustomerWhereUniqueInput(customerId: body['customer_id']));
     if (customer == null)
       throw Failure(HttpStatus.notFound, "Customer not found");
     if (customer.paymentMethod != null) {
       throw Failure(HttpStatus.notFound, "Customer has a payment method");
     }
-    if (details.trim().isEmpty)
-      throw Failure(HttpStatus.badRequest, "Details is required");
+
     var results = await prismaClient.customerPaymentMethod.create(
         data: PrismaUnion.$2(CustomerPaymentMethodUncheckedCreateInput(
             customerId: customer.customerId ?? "",
-            paymentMethod: _paymentMethodEnum(body?['payment_method']),
-            details: details)));
+            paymentMethod: _paymentMethodEnum(body['payment_method']),
+            details: body['details'])));
     return results;
   }
 }

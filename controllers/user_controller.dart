@@ -4,10 +4,10 @@ import 'package:dart_frog/dart_frog.dart';
 import 'package:redis/redis.dart';
 
 import '../helpers/constants.dart';
+import '../helpers/extensions.dart';
 import '../helpers/response.dart';
 import '../prisma/generated_dart_client/client.dart';
 import '../services/user/user_service.dart';
-import 'customer_controller.dart';
 
 class UserController {
   PrismaClient prismaClient;
@@ -23,6 +23,17 @@ class UserController {
       await context.read<Command?>()?.set(user?.userId ?? "", token);
       return Success(message: "Successful", data: user?.toJson().filterNulls())
           .toJson(include: {"token": token});
+    } on Failure catch (failure) {
+      return failure.toJson();
+    } catch (e) {
+      return Failure(HttpStatus.internalServerError, e.toString()).toJson();
+    }
+  }
+
+  Future<Response> signOut(RequestContext context) async {
+    try {
+      await userService.signOut(context);
+      return Success(message: "Successful", data: true).toJson();
     } on Failure catch (failure) {
       return failure.toJson();
     } catch (e) {

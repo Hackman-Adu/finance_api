@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
 
+import '../helpers/extensions.dart';
 import '../helpers/response.dart';
 import '../prisma/generated_dart_client/client.dart';
 import '../services/customer/customer_service.dart';
@@ -91,20 +92,5 @@ class CustomerController {
     } catch (e) {
       return Failure(HttpStatus.internalServerError, e.toString()).toJson();
     }
-  }
-}
-
-extension MapExtensionOnMap on Map {
-  Map filterNulls() {
-    var data = this;
-    List<String> keysWithNulls = [];
-    data.forEach((key, value) {
-      if (value == null) keysWithNulls.add(key);
-      if (value is Map) value.filterNulls();
-    });
-    for (var key in keysWithNulls) {
-      data.remove(key);
-    }
-    return data;
   }
 }
